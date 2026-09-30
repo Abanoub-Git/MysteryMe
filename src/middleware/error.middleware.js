@@ -4,5 +4,6 @@ export const globalErrorHandler = (error, req, res, next) => {
         error_message: error.message || "Server Error",
         status,
         issues: error.cause?.issues || [],
+        stack: error.stack
     });
 };

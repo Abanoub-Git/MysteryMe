@@ -4,7 +4,7 @@ import { globalErrorHandler } from './middleware/index.js'
 import { PORT } from './config.js'
 import { bootstrapDB } from './DB/connection.db.js'
 const app = express()
-bootstrapDB(app, PORT)
+await bootstrapDB(app, PORT)
 app.use(express.json())
 
 
