@@ -3,9 +3,10 @@ import { authenticationController, messageController, userController } from './m
 import { globalErrorHandler } from './middleware/index.js'
 import { PORT } from './config.js'
 import { bootstrapDB } from './DB/connection.db.js'
+import cors from "cors"
 const app = express()
 await bootstrapDB(app, PORT)
-app.use(express.json())
+app.use(cors(),express.json())
 
 
 app.get('/', (req, res) => res.status(200).json({message: 'Hello World!'})) 
