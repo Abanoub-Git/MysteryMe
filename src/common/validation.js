@@ -16,6 +16,7 @@ const matchFields = ({ original, copy, data, ctx }) => {
 
 export const generalValidationFields = {
     email: z.email({message: "invalid email please try again"}),
+    otp: z.string().regex(/^[0-9]{6}$/, { message: "invalid OTP please try again" }),
     password: z.string().regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,16}$/,{error: "invalid password please try again"}).min(8).max(16),
     username: (lang) => z.string().min(2, {message:lang == LangEnum.AR ? "عفواً لا يمكنك إدخال اسم مستخدم أقل من حرفين" : "min length is 2 char"}),
     phone: z.e164(),

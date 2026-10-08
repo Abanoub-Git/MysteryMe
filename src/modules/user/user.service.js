@@ -6,6 +6,7 @@ import { ACCESS_TOKEN_EXPIRES_IN } from "../../config.js"
 import { LogoutEnum } from "../../common/enum/security.enum.js"
 import { del, keys } from "../../common/services/index.js"
 
+
 export const profile = async (user) => {
     return user
 }

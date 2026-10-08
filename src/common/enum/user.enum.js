@@ -15,3 +15,9 @@ export const ProviderEnum ={
     SYSTEM:0,
     GOOGLE:1
 } 
+
+
+export const TwoStepVerificationEnum = {
+    DISABLED: 0,
+    ENABLED: 1
+}

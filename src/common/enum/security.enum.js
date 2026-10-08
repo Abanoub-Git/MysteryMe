@@ -4,7 +4,6 @@ export const TokenTypeEnum = {
 }
 
 
-
 export const LangEnum = {
     AR: 0,
     EN: 1

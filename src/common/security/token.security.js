@@ -8,11 +8,15 @@ import { RoleEnum } from "../enum/user.enum.js";
 import {randomUUID} from "node:crypto"
 import { exist, set } from "../services/index.js";
 
+export const userLoginTrailsKey = ({ email }) => {
+    return `User::login:trails:${email}`
+}
 
 
 export const userBaseKey = ({ userId }) => {
     return `User::${userId.toString()}`
 }
+
 
 export const userBaseRevokeTokenKey = ({ userId }) => {
     return `${userBaseKey({ userId })}::Revoke_Token`

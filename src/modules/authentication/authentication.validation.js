@@ -17,6 +17,7 @@ export const login = (lang) => {
     });
 };
 
+
 // schema => validators.signup => signup() (signup auth valid meen byshawr 3leha validators.signup meen bystlmha schema)
 export const signup = (lang) => {
     return z.object({
@@ -29,4 +30,48 @@ export const signup = (lang) => {
         generalValidationFields.matchFields({ original: "password", copy: "confirmPassword", data, ctx })
     })
 })
+}
+
+
+export const confirmEmail = (lang) => {
+    return z.object({
+        body: z.strictObject({
+            email: generalValidationFields.email,
+            otp: generalValidationFields.otp,
+        })
+    })
+}
+
+
+export const resendConfirmEmail = (lang) => {
+    return z.object({
+        body: z.strictObject({
+            email: generalValidationFields.email
+        })
+    })
+}
+
+
+
+export const resetPassword = (lang) => {
+    return z.object({
+        body: z.strictObject({
+        email: generalValidationFields.email,
+        otp: generalValidationFields.otp,
+        password: generalValidationFields.password,
+        confirmPassword: generalValidationFields.password,
+        }).superRefine((data, ctx) => {generalValidationFields.matchFields({original: "password",copy: "confirmPassword",data,ctx});})
+    });
+};
+
+
+
+
+export const confirmTwoStepVerification = (lang) => {
+    return z.object({
+        body: z.strictObject({
+            email: generalValidationFields.email,
+            otp: generalValidationFields.otp
+        })
+    })
 }

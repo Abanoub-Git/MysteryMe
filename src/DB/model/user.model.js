@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { GenderEnum, ProviderEnum, RoleEnum } from "../../common/enum/index.js";
+import { GenderEnum, ProviderEnum, RoleEnum, TwoStepVerificationEnum } from "../../common/enum/index.js";
 
 const userSchema = new mongoose.Schema({
     firstName: {
@@ -31,6 +31,11 @@ const userSchema = new mongoose.Schema({
     image: String,
     coverImage: [String],
     changeCredentialsTime: Date,
+    twoStepVerification: {
+        type: Number,
+        enum: Object.values(TwoStepVerificationEnum),
+        default: TwoStepVerificationEnum.DISABLED
+    },
     gender: {
         type: Number,
         enum: Object.values(GenderEnum),
