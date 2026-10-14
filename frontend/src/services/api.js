@@ -3,18 +3,29 @@ export const API_BASE_URL = RAW_BASE_URL.replace(/\/$/, "");
 
 export const getImageUrl = (path) => {
   if (!path) return null;
+
   if (typeof path === "object") {
     path = path.url || path.path || path.src || "";
   }
-  if (!path || typeof path !== "string") return null;
-  if (path.startsWith("http://") || path.startsWith("https://") || path.startsWith("blob:") || path.startsWith("data:")) {
+
+  if (typeof path !== "string" || !path) return null;
+
+  if (/^(https?:\/\/|blob:|data:)/i.test(path)) {
     return path;
   }
+
   let clean = path.replace(/\\/g, "/").replace(/^\//, "");
-  if (!clean.startsWith("assets/") && (clean.startsWith("users/") || clean.startsWith("messages/") || clean.startsWith("general/"))) {
+
+  if (
+    !clean.startsWith("assets/") &&
+    /^(users|messages|general)\//.test(clean)
+  ) {
     clean = `assets/${clean}`;
   }
-  return API_BASE_URL ? `${API_BASE_URL}/${clean}` : `/${clean}`;
+
+  return API_BASE_URL
+    ? `${API_BASE_URL}/${clean}?ngrok-skip-browser-warning=true`
+    : `/${clean}`;
 };
 
 // Storage Keys
