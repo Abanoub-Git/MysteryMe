@@ -1,16 +1,12 @@
 import jwt from "jsonwebtoken"
 import { ACCESS_ADMIN_TOKEN_SIGNATURE, ACCESS_TOKEN_EXPIRES_IN, ACCESS_USER_TOKEN_SIGNATURE, REFRESH_ADMIN_TOKEN_SIGNATURE, REFRESH_TOKEN_EXPIRES_IN, REFRESH_USER_TOKEN_SIGNATURE } from "../../config.js";
 import { BadException, NotfoundException, UnauthorizedException } from "../exceptions/error.exception.js";
-import { findById } from "../repository/db.repository.js";
-import { UserModel } from "../../DB/model/user.model.js";
+import { findById } from "../repository/user.repository.js";
 import { TokenTypeEnum } from "../enum/security.enum.js";
 import { RoleEnum } from "../enum/user.enum.js";
 import {randomUUID} from "node:crypto"
 import { exist, set } from "../services/index.js";
 
-export const userLoginTrailsKey = ({ email }) => {
-    return `User::login:trails:${email}`
-}
 
 
 export const userBaseKey = ({ userId }) => {
@@ -85,7 +81,6 @@ export const decodeToken = async ({
     } 
 
     const user = await findById({
-        model: UserModel,
         id: payload.sub
     })
     if (!user) {

@@ -1,7 +1,7 @@
 import { resolve } from 'node:path'
 import { config } from 'dotenv'
 
-const NODE_ENV = process.env.NODE_ENV ?? 'development'
+export const NODE_ENV = process.env.NODE_ENV ?? 'development'
 config({ path: resolve(`.env.${NODE_ENV}`) })
 export const PORT = parseInt(process.env.PORT ?? "9000")
 
@@ -24,3 +24,5 @@ export const WEB_CLIENT_IDS = process.env.WEB_CLIENT_IDS
 export const APP_EMAIL = process.env.APP_EMAIL
 export const APP_PASSWORD = process.env.APP_PASSWORD
 export const APP_NAME = process.env.APP_NAME
+
+

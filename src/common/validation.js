@@ -1,8 +1,9 @@
 import {z} from "zod"
 import { GenderEnum } from "./enum/user.enum.js"
 import { LangEnum } from "./enum/security.enum.js"
+import mongoose from "mongoose"
 
-
+//this compares between pass and confirm pass, email and confrim email  
 const matchFields = ({ original, copy, data, ctx }) => {
     if (data[original] != data[copy]) {
         ctx.addIssue({
@@ -16,11 +17,21 @@ const matchFields = ({ original, copy, data, ctx }) => {
 
 export const generalValidationFields = {
     email: z.email({message: "invalid email please try again"}),
-    otp: z.string().regex(/^[0-9]{6}$/, { message: "invalid OTP please try again" }),
-    password: z.string().regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,16}$/,{error: "invalid password please try again"}).min(8).max(16),
-    username: (lang) => z.string().min(2, {message:lang == LangEnum.AR ? "عفواً لا يمكنك إدخال اسم مستخدم أقل من حرفين" : "min length is 2 char"}),
+    password: z.string().min(8).max(16),
+    otp: z.string().length(6),
+    username: z.string(),
     phone: z.e164(),
     confirmPassword: z.string().min(8).max(16),
     gender: z.enum(GenderEnum),
+    id: z.string().refine((data) => mongoose.Types.ObjectId.isValid(data), { message: "Invalid Id" }),
+    file: z.strictObject({
+        fieldname: z.string(),
+        originalname: z.string(),
+        encoding: z.string(),
+        mimetype: z.string(),
+        buffer: z.instanceof(Buffer),
+        size: z.number(),
+        path: z.string()
+    }),
     matchFields 
 }

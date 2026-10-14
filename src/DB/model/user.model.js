@@ -25,6 +25,11 @@ const userSchema = new mongoose.Schema({
             return this.provider === ProviderEnum.SYSTEM
         },
     },
+    provider: {
+        type: Number,
+        enum: Object.values(ProviderEnum),
+        default: ProviderEnum.SYSTEM
+    },
     phone:String,
     DOB: Date,
     confirmEmail:Date,

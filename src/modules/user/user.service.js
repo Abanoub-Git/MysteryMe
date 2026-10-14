@@ -1,26 +1,45 @@
-import { findByIdAndUpdate } from "../../common/repository/db.repository.js"
-import { UserModel } from "../../DB/model/user.model.js"
+import { findByIdAndUpdate } from "../../common/repository/user.repository.js"
 import { createLoginCredentials, createRevokeToken, userBaseRevokeTokenKey} from "../../common/security/token.security.js"
 import { ConflictException } from "../../common/exceptions/error.exception.js"
 import { ACCESS_TOKEN_EXPIRES_IN } from "../../config.js"
 import { LogoutEnum } from "../../common/enum/security.enum.js"
 import { del, keys } from "../../common/services/index.js"
+import { decryption, encryption } from "../../common/security/encryption.security.js"
 
 
 export const profile = async (user) => {
-    return user
+    if (!user) return user;
+    const userObj = user.toObject ? user.toObject() : { ...user };
+    if (userObj.phone && typeof userObj.phone === "string" && userObj.phone.includes(":::")) {
+        try {
+            userObj.phone = await decryption(userObj.phone);
+        } catch {
+            // Keep original if decrypt fails
+        }
+    }
+    return userObj;
 }
 
 
 
 export const update = async (user, data) => {
+    const updateData = { ...data };
+    if (updateData.username && typeof updateData.username === "string") {
+        const parts = updateData.username.trim().split(" ");
+        updateData.firstName = parts[0] || user.firstName;
+        updateData.lastName = parts.slice(1).join(" ") || user.lastName;
+        delete updateData.username;
+    }
+    if (updateData.phone && typeof updateData.phone === "string" && !updateData.phone.includes(":::")) {
+        updateData.phone = await encryption(updateData.phone);
+    }
     const account = await findByIdAndUpdate({
-        model: UserModel,
         id: user._id,
-        update: data
-    })
-    return account
+        update: updateData
+    });
+    return await profile(account);
 }
+
 
 
 export const rotateToken = async (payload, user, issuer) => {
@@ -42,7 +61,7 @@ export const logout = async (payload, user, { action = LogoutEnum.DEVICE } = {})
         case LogoutEnum.ALL:
             user.changeCredentialsTime = new Date();
             await user.save();
-            console.log({ k: await keys({ prefix: userBaseRevokeTokenKey({ userId: payload.sub }) }) });
+            // console.log({ k: await keys({ prefix: userBaseRevokeTokenKey({ userId: payload.sub }) }) });
             await del({ key: await keys({ prefix: userBaseRevokeTokenKey({ userId: payload.sub }) }) });
             break;
         default:

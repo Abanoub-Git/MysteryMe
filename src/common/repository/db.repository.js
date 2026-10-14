@@ -90,6 +90,32 @@ export const find = async ({
 }
 
 
+//count
+export const countDocument = async ({
+    filter = {},
+    model
+} = {}) => {
+    return await model.countDocuments(filter);
+};
+
+
+//paginate
+export const paginate = async ({
+    filter = {},
+    options = {},
+    model,
+    page = 1,
+    limit = 5
+} = {}) => {
+    const skip = (page - 1) * limit;
+    const count = await countDocument({filter, model});
+    const pages = Math.ceil(count / limit);
+    const docs = await find({ model , filter , options:{...options,skip,limit} });
+    return {count,limit,pages,currentPage: page,docs};
+};
+
+
+
 // insertMany
 export const insertMany = async ({
     data,

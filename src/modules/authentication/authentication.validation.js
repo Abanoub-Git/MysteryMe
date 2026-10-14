@@ -22,7 +22,7 @@ export const login = (lang) => {
 export const signup = (lang) => {
     return z.object({
     body: loginSchema.extend({
-        username: generalValidationFields.username(lang),
+        username: generalValidationFields.username,
         phone: generalValidationFields.phone,
         confirmPassword: generalValidationFields.password,
         gender: generalValidationFields.gender,

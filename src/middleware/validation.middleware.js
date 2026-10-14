@@ -8,6 +8,8 @@ export const validation = (schema) => {
             body: req.body,
             query: req.query,
             params: req.params,
+            files: req.files,
+            file: req.file
         })
         if (!validationResult.success) {
             throw BadException("Validation Error", validationResult.error.issues)

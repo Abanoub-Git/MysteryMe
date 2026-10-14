@@ -4,21 +4,24 @@ import { confirmEmail, confirmTwoStepVerification, disableTwoStepVerification, e
 import * as validators from './authentication.validation.js'
 import { validation } from '../../middleware/validation.middleware.js';
 import { authentication } from '../../middleware/authentication.middleware.js';
+import { del } from '../../common/services/cache.service.js';
+import { generateRateLimiter } from '../../common/utils/limiter.js';
+import { requireEgyptRegistration } from '../../middleware/registration.middleware.js';
 
 const router = Router();
+const signupLimiter = generateRateLimiter({ limit: 10, ttl: 5, message: "Too many registration attempts. Please try again later." });
 
-router.post('/loginWithGmail',  async (req, res) => {
+router.post('/loginWithGmail', async (req, res, next) => {
     try {
-        const data = await LoginWithGmail(req.body,`${req.protocol}://${req.host}`)
-        return successResponse({res, data, statusCode: 201})
+        const data = await LoginWithGmail(req.body, `${req.protocol}://${req.host}`)
+        return successResponse({ res, data, status: 200 })
     } catch (error) {
-        console.error("Google Login Error:", error)
-        return successResponse({res, data: error.message, statusCode: 400})
+        next(error)
     }
 })
 
 
-router.post("/signup", validation(validators.signup) ,async (req, res, next) => {
+router.post("/signup", requireEgyptRegistration, signupLimiter, validation(validators.signup), async (req, res, next) => {
     const data = await signup(req.validate.body)
     return successResponse({ res, status: 201, data })
 })
@@ -56,9 +59,11 @@ router.patch("/reset-password", validation(validators.resetPassword) ,async (req
 })
 
 
+const loginLimiter = generateRateLimiter({limit:5,ttl:3,skipSuccessfulRequests:true})
 
-router.post("/login",  validation(validators.login) , async (req, res, next) => {
+router.post("/login", loginLimiter, validation(validators.login) , async (req, res, next) => {
     const data = await login(req.validate.body, `${req.protocol}://${req.host}`)
+    await del({key: req.rateLimit.key})
     return successResponse({ res, data })
 })
 
@@ -92,3 +97,10 @@ router.patch("/disable-2-step",authentication(),async (req, res, next) => {
 
 
 export default router
+
+
+
+
+
+
+

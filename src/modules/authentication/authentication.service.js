@@ -1,10 +1,9 @@
 import { BadException, ConflictException, NotfoundException, TooManyRequestsException } from "../../common/exceptions/error.exception.js"
-import { createOne, findOne } from "../../common/repository/index.js"
-import { decryption, encryption } from "../../common/security/encryption.security.js"
+import { createOne, findOne } from "../../common/repository/user.repository.js"
+import { encryption } from "../../common/security/encryption.security.js"
 import { hash , compare } from "../../common/security/hash.security.js"
-import { UserModel } from "../../DB/model/user.model.js"
 import bcrypt from "bcrypt"
-import { createLoginCredentials, userBaseRevokeTokenKey, userLoginTrailsKey } from "../../common/security/token.security.js"
+import { createLoginCredentials, userBaseRevokeTokenKey } from "../../common/security/token.security.js"
 import {OAuth2Client} from 'google-auth-library';
 import { ProviderEnum, TwoStepVerificationEnum } from "../../common/enum/user.enum.js"
 import { WEB_CLIENT_IDS } from "../../config.js"
@@ -16,44 +15,68 @@ import { userEmailKey, userEmailTrailsKey } from "../../common/utils/index.js"
 
 const client = new OAuth2Client();
 async function verifyGoogleAccount(idToken) {
-    const ticket = await client.verifyIdToken({
-        idToken,
-        audience: WEB_CLIENT_IDS,
-    });
-    const payload = ticket.getPayload();
-    if(!payload.email_verified){
-        throw BadException("Email is not verified")
+    if (!idToken) {
+        throw BadException("Google ID token is required");
     }
-    return payload
+    const audience = WEB_CLIENT_IDS?.includes(",")
+        ? WEB_CLIENT_IDS.split(",").map((id) => id.trim()).filter(Boolean)
+        : WEB_CLIENT_IDS;
+
+    let ticket;
+    try {
+        ticket = await client.verifyIdToken({
+            idToken,
+            audience,
+        });
+    } catch (error) {
+        throw BadException(error.message || "Invalid Google ID token");
+    }
+
+    const payload = ticket.getPayload();
+    if (!payload?.email_verified) {
+        throw BadException("Email is not verified");
+    }
+    return payload;
 }
 
 
 
-export const LoginWithGmail = async ({ idToken },issuer) => {
-    console.log({ idToken });
-    const {name,email,picture} = await verifyGoogleAccount(idToken)
-    console.log({ name,email,picture }); //name email pic dol gbthom mn hna 
+export const LoginWithGmail = async ({ idToken }, issuer) => {
+    const { name, email, picture } = await verifyGoogleAccount(idToken);
     const existAccount = await findOne({
-        model: UserModel,
         filter: { email },
-    })
-    if(existAccount){
-        if(existAccount.provider !== ProviderEnum.GOOGLE){
-            throw ConflictException("invalid account provider")
+    });
+
+    let user = existAccount;
+    if (existAccount) {
+        if (existAccount.provider !== ProviderEnum.GOOGLE) {
+            throw ConflictException("invalid account provider");
         }
-    } 
-    const user = await createOne({      
-        model: UserModel,
-        data: {
-            username: name,
-            email,
-            confirmEmail: new Date(),
-            provider: ProviderEnum.GOOGLE,
-            image: picture
+        if (!existAccount.image && picture) {
+            existAccount.image = picture;
+            await existAccount.save();
         }
-    })
-    return await createLoginCredentials({user,issuer})
-}
+    } else {
+        const cleanName = (name || "Google User").trim();
+        const parts = cleanName.split(/\s+/).filter(Boolean);
+        let firstName = parts[0] || "Google";
+        let lastName = parts.slice(1).join(" ") || "User";
+        if (firstName.length < 2) firstName = `${firstName}_`;
+        if (lastName.length < 2) lastName = `${lastName}_`;
+
+        user = await createOne({      
+            data: {
+                firstName,
+                lastName,
+                email,
+                confirmEmail: new Date(),
+                provider: ProviderEnum.GOOGLE,
+                image: picture
+            }
+        });
+    }
+    return await createLoginCredentials({ user, issuer });
+};
 
 
 
@@ -81,16 +104,14 @@ const sendEmailOtp = async ({email,subject,expiresIn=120,maxTrails=3, blockInSec
 
 
 
-export const signup = async ({ email, password,phone, username }) => {
+export const signup = async ({ email, password, phone, username, gender }) => {
     const duplicatedAccount = await findOne({
-        model: UserModel,
         filter: { email },
         options: { select: "email" }
     })
     if (duplicatedAccount) throw ConflictException("Email already exists") //wlaw 3aiz aktb mess gowa "email already exist"
     const account = await createOne({
-        model: UserModel,
-        data: { email, password: await hash(password),phone:await encryption(phone), username }
+        data: { email, password: await hash(password), phone: await encryption(phone), username, gender }
     })
     await sendEmailOtp({email,subject:EmailSubjectEnum.CONFIRM_EMAIL})
     return account
@@ -100,7 +121,6 @@ export const signup = async ({ email, password,phone, username }) => {
 
 export const confirmEmail = async ({ otp, email }) => {
     const account = await findOne({
-        model: UserModel,
         filter: { email, provider: ProviderEnum.SYSTEM, confirmEmail: { $exists: false } } //da 3shan law fe asln account confirmed abl kda msh hy3ml confirm tany
     })
     if (!account) throw NotfoundException("Invalid account")
@@ -118,7 +138,6 @@ export const confirmEmail = async ({ otp, email }) => {
 
 export const resendConfirmEmail = async ({ email }) => {
     const account = await findOne({
-        model: UserModel,
         filter: { email, provider: ProviderEnum.SYSTEM, confirmEmail: { $exists: false } } //da 3shan law fe asln account confirmed abl kda msh hy3ml confirm tany
     })
     if (!account) throw NotfoundException("Invalid account")
@@ -130,7 +149,6 @@ export const resendConfirmEmail = async ({ email }) => {
 
 export const requestForgotPassword = async ({ email }) => {
     const account = await findOne({
-        model: UserModel,
         filter: { email, provider: ProviderEnum.SYSTEM, confirmEmail: { $exists: true } } 
     })
     if (!account) throw NotfoundException("Invalid account")
@@ -142,7 +160,6 @@ export const requestForgotPassword = async ({ email }) => {
 
 export const verifyForgotPassword = async ({ otp, email }) => {
     const account = await findOne({
-        model: UserModel,
         filter: { email, provider: ProviderEnum.SYSTEM, confirmEmail: { $exists: true } } 
     })
     if (!account) throw NotfoundException("Invalid account")
@@ -171,35 +188,42 @@ export const resetPassword = async ({ otp, email, password }) => {
 
 
 
+
+
+
+
+
 export const login = async ({ email, password }, issuer) => {
     const account = await findOne({
-        model: UserModel,
-        filter: { email,provider: ProviderEnum.SYSTEM,confirmEmail: { $exists: true } }
-    })
-    if (!account) throw NotfoundException("Invalid email or password")
-    const loginTrailsKey = userLoginTrailsKey({ email })
-    const loginTrails = await get({ key: loginTrailsKey }) ?? 0
-    if (loginTrails >= 5) {
-        const remainingTime = await ttl({ key: loginTrailsKey })
-        throw TooManyRequestsException(`Too many login attempts, please try again after ${remainingTime} seconds`)
-    }
-    const match = await bcrypt.compare(password, account.password)
-    if (!match) {
-        const currentTrails = await incrBy({ key: loginTrailsKey })
-        if (currentTrails >= 5) {
-            await expire({ key: loginTrailsKey, ttl: 5 * 60 })
-            const remainingTime = await ttl({ key: loginTrailsKey })
-            throw TooManyRequestsException(`Too many login attempts, please try again after ${remainingTime} seconds`)
+        filter: {
+            email,
+            provider: ProviderEnum.SYSTEM,
+            confirmEmail: { $exists: true }
         }
-        throw NotfoundException("Invalid email or password")
+    });
+    if (!account) throw NotfoundException("Invalid email or password");
+    const match = await bcrypt.compare(password, account.password);
+    if (!match) {
+        throw NotfoundException("Invalid email or password");
     }
-    await del({ key: loginTrailsKey })
     if (account.twoStepVerification === TwoStepVerificationEnum.ENABLED) {
-        await sendEmailOtp({email: account.email,subject: EmailSubjectEnum.TWO_STEP_VERIFICATION})
-        return {twoStepVerification: true,message: "Verification code sent to your email"}
+        await sendEmailOtp({
+            email: account.email,
+            subject: EmailSubjectEnum.TWO_STEP_VERIFICATION
+        });
+        return {
+            twoStepVerification: true,
+            message: "Verification code sent to your email"
+        };
     }
-    return await createLoginCredentials({user: account,issuer})
-}
+    return await createLoginCredentials({
+        user: account,
+        issuer
+    });
+};
+
+
+
 
 
 
@@ -237,7 +261,6 @@ export const confirmTwoStepVerification = async ({ user, email, otp }) => {
 
 export const loginConfirmation = async ({ email, otp }, issuer) => {
     const account = await findOne({
-        model: UserModel,
         filter: { email, provider: ProviderEnum.SYSTEM, confirmEmail: { $exists: true }, twoStepVerification: TwoStepVerificationEnum.ENABLED }})
     if (!account) {
         throw NotfoundException("Invalid account")

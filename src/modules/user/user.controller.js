@@ -45,7 +45,7 @@ router.patch(
     }),
     async (req, res, next) => {
         const oldImage = req.user.image
-        req.user.image = req.file.finalPath
+        req.user.image = req.file.path
         await req.user.save()
         if (oldImage && oldImage.startsWith("assets/")) {
             try {

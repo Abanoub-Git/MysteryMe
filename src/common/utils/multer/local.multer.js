@@ -28,7 +28,7 @@ export const processFile = async ({customPath = "general", file, validation = []
         await mkdir(resolve(`./assets/${customPath}`), {recursive:true}) //law msh mwgod e3mlo creation 8er kda kml
         const uniqueFilePath = `assets/${customPath}/${randomUUID()}.${result.ext}`
         await writeFile(resolve(`./${uniqueFilePath}`), file.buffer);
-        file.finalPath = uniqueFilePath
+        file.path = uniqueFilePath
         return file
     }
 }
@@ -50,10 +50,11 @@ export const processFiles = async ({customPath, files = [], validation = [] }) =
     // law kolo tmm w 3da mn ali fo2 ybd2 b2a y5zn f assets
     const assets = []
     for (const { file, result } of validatedFiles) {
-        const uniqueFilePath = `${customPath}/${randomUUID()}.${result.ext}`
-        await writeFile(resolve(`./${uniqueFilePath}`),file.buffer)
-        file.finalPath = uniqueFilePath
-        assets.push(file)
+        const uniqueFilePath = `${customPath}/${randomUUID()}.${result.ext}`;
+        await mkdir(resolve(`./assets/${customPath}`), { recursive: true });
+        await writeFile(resolve(`./assets/${uniqueFilePath}`), file.buffer);
+        file.path = `assets/${uniqueFilePath}`;
+        assets.push(file);
     }
     return assets
 }
