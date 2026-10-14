@@ -20,6 +20,7 @@ app.use(
     morgan("combined"),
     helmet({
         crossOriginResourcePolicy: { policy: "cross-origin" },
+        crossOriginEmbedderPolicy: false,
     }),
     cors({
         origin: [
