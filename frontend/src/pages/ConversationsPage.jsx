@@ -155,7 +155,7 @@ export const ConversationsPage = () => {
   };
 
   return (
-    <div style={{ maxWidth: "860px", margin: "0 auto", padding: "0 16px" }}>
+    <div style={{ maxWidth: "860px", margin: "0 auto", padding: "0 16px" , marginTop:"20px"}}>
       {/* Header */}
       <div style={{ marginBottom: "28px" }}>
         <h1 style={{ fontSize: "28px", marginBottom: "8px" }}>Conversations</h1>

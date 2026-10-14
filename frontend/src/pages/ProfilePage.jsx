@@ -169,7 +169,7 @@ export const ProfilePage = () => {
   }, [currentImg]);
 
   return (
-    <div style={{ maxWidth: "760px", margin: "0 auto", padding: "0 16px" }}>
+    <div style={{ maxWidth: "760px", margin: "0 auto", padding: "0 16px", marginTop:"20px" }}>
       <div style={{ marginBottom: "28px" }}>
         <h1 style={{ fontSize: "28px", marginBottom: "8px" }}>Account Settings</h1>
         <p style={{ color: "var(--color-text-secondary)", fontSize: "15px" }}>

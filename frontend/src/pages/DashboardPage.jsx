@@ -95,7 +95,7 @@ export const DashboardPage = () => {
   const pendingRequestsCount = requests.filter((r) => r.status === "pending").length;
 
   return (
-    <div style={{ maxWidth: "1000px", margin: "0 auto", padding: "0 16px" }}>
+    <div style={{ maxWidth: "1000px", margin: "0 auto", padding: "0 16px", marginTop:"20px" }}>
       {/* Welcome Banner */}
       <div
         className="card"
