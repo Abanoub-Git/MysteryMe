@@ -16,8 +16,24 @@ const limiter = generateRateLimiter({limit:1000})
 app.set("trust proxy", true);
 
 
-app.use(morgan("combined"),helmet({crossOriginResourcePolicy: { policy: "cross-origin" }}),cors(),limiter,express.json())
-app.use('/assets', express.static('./assets')) 
+app.use(
+    morgan("combined"),
+    helmet({
+        crossOriginResourcePolicy: { policy: "cross-origin" },
+    }),
+    cors({
+        origin: [
+        "https://mystery-me-eta.vercel.app",
+        "http://localhost:5173",
+        ],
+        methods: ["GET", "HEAD", "PUT", "PATCH", "POST", "DELETE"],
+        allowedHeaders: ["Content-Type", "Authorization"],
+    }),
+    limiter,
+    express.json()
+);
+
+app.use("/assets", express.static("./assets"));
 
 
 app.get('/', (req, res) => res.status(200).json({message: 'Hello World!'})) 
