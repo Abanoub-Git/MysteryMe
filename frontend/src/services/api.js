@@ -57,8 +57,9 @@ export async function apiRequest(endpoint, {
     : `${API_BASE_URL}${endpoint.startsWith("/") ? "" : "/"}${endpoint}`;
 
   const requestHeaders = {
-    ...headers
-  };
+  ...headers,
+  "ngrok-skip-browser-warning": "true",
+};
 
   const authToken = token || getStoredToken();
   if (authToken) {
