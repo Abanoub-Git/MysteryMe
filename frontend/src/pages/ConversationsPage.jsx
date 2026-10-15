@@ -284,7 +284,6 @@ export const ConversationsPage = () => {
                 </div>
 
                 <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                  <Badge variant="neutral">Direct Chat</Badge>
                   <Button
                     id={`btn-chat-conv-${c._id}`}
                     size="sm"
